@@ -5,6 +5,7 @@
 
 #include <WiFi.h>
 #include "../include/config.h"
+#include "../include/images.h"
 
 GxEPD2_BW <GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(
   GxEPD2_154_D67(/*CS=*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)
@@ -19,12 +20,6 @@ const char* lines [][1] = {
   {"Humidity:"}
   };
 int line_count = sizeof(lines)/sizeof(lines[0]);
-
-//Image
-static unsigned char icon1[] = {
-  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F, 0xF0, 0xF7, 0xEF, 0xFB, 0xDF, 
-  0x1D, 0xB8, 0xEF, 0xF7, 0xF7, 0xEF, 0x3F, 0xFC, 0xDF, 0xFB, 0x6F, 0xF6, 
-  0x3F, 0xFC, 0x3F, 0xFC, 0x7F, 0xFE, 0xFF, 0xFF};
   
 void wifi_init(){
   Serial.begin(115200);
