@@ -13,6 +13,9 @@ GxEPD2_BW <GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(
 
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASS;
+const char* api_key = API_KEY;
+const char* lat = LAT;
+const char* lon = LON;
 
 //Displayed text
 const char* lines [][1] = { 
@@ -20,7 +23,7 @@ const char* lines [][1] = {
   {"Humidity:"}
   };
 int line_count = sizeof(lines)/sizeof(lines[0]);
-  
+
 void wifi_init(){
   Serial.begin(115200);
   delay(1000);
@@ -37,6 +40,13 @@ void wifi_init(){
   Serial.println("\nConnected to the WiFi network");
   Serial.print("Local ESP32 IP: ");
   Serial.println(WiFi.localIP());
+
+  //Assemble URL
+  char url[256];
+  snprintf(url, sizeof(url),
+  "https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s",
+  lat, lon, api_key);
+  Serial.println(url);
 }
 void printing_process(){
   display.setFullWindow();
