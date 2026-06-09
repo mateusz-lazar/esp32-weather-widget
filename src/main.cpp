@@ -2,8 +2,10 @@
 #include <GxEPD2_BW.h>
 #include <Fonts/FreeSansBold12pt7b.h>
 #include <Fonts/FreeSans12pt7b.h>
-
 #include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
 #include "../include/config.h"
 #include "../include/images.h"
 
@@ -17,12 +19,11 @@ const char* api_key = API_KEY;
 const char* lat = LAT;
 const char* lon = LON;
 
-//Displayed text
-const char* lines [][1] = { 
-  {"Temperature:"}, 
-  {"Humidity:"}
-  };
-int line_count = sizeof(lines)/sizeof(lines[0]);
+char url[256];
+
+const char* city;
+float temperature;
+int humidity;
 
 void wifi_init(){
   Serial.begin(115200);
@@ -40,43 +41,78 @@ void wifi_init(){
   Serial.println("\nConnected to the WiFi network");
   Serial.print("Local ESP32 IP: ");
   Serial.println(WiFi.localIP());
-
-  //Assemble URL
-  char url[256];
+}
+void assemble_url(){
   snprintf(url, sizeof(url),
   "https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s",
   lat, lon, api_key);
   Serial.println(url);
 }
-void printing_process(){
-  display.setFullWindow();
-  display.firstPage();
-  display.fillScreen(GxEPD_WHITE);
-  do
-  {
-    for(int i = 0; i < line_count; i ++)
-    {
-      if(i == 0)
-      {
-        display.setFont(&FreeSansBold12pt7b);
-      }
-      display.setCursor(200, -10 + (i * 25));
-      display.print(lines[i][0]);
-      if(i == 0)
-      {
-        display.setFont(&FreeSans12pt7b);
-      }
+void fetch_weather_data(const char* url){
+  HTTPClient http; //create HTTPClient type object named http
+  http.begin(url); //asign url to http where it will comunicate
+
+  int httpValue = http.GET();
+  
+  if(httpValue == 200){
+    WiFiClient* stream = http.getStreamPtr(); //WiFiClient belongs to HTTPClient
+    
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, *stream);
+
+    if(!error){
+      city = doc["name"];
+      temperature = doc["main"]["temp"];
+      humidity = doc["main"]["humidity"];
+      temperature = temperature - 273.15;
+
+      Serial.printf("Temperature: %f\n", temperature);
+      Serial.printf("Humidity: %d\n", humidity);
+
+    }else{
+      Serial.printf("JSON error: %d\n", error);
     }
-    display.drawXBitmap(5, 80, icon1, 16, 16, GxEPD_BLACK);
-  }while(display.nextPage());
+  }else{
+    Serial.printf("HTTP error: %d\n", httpValue);
+  }
 }
 void set_text_properties(){
   display.setRotation(1);
   display.setFont(&FreeSans12pt7b); //font changed in printing_process() for lines[0]
   display.setTextColor(GxEPD_BLACK);
 }
+void printing_process(){
+  
+//Assemble displayed text
+  const char* lines [][1] = { 
+    {"City:"},
+    {"Temperature:"}, 
+    {"Humidity:"}
+  };
+  int line_count = sizeof(lines)/sizeof(lines[0]);
+
+  display.setFullWindow();
+  display.firstPage();
+  display.fillScreen(GxEPD_WHITE);
+  do
+  {
+    for(int i = 0; i < line_count; i ++){
+      if(i == 0){
+        display.setFont(&FreeSansBold12pt7b);
+      }
+      display.setCursor(200, -10 + (i * 25));
+      display.print(lines[i][0]);
+      if(i == 0){
+        display.setFont(&FreeSans12pt7b);
+      }
+    }
+    display.drawXBitmap(5, 80, icon1, 16, 16, GxEPD_BLACK);
+  }while(display.nextPage());
+}
 void setup(){
   wifi_init();
+  assemble_url();
+  fetch_weather_data(url);
   display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
   set_text_properties();
   printing_process();
