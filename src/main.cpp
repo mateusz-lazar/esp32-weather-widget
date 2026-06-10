@@ -20,10 +20,10 @@ const char* lat = LAT;
 const char* lon = LON;
 
 char url[256];
-
-const char* city;
+char city[32];
 float temperature;
 int humidity;
+char last_update[6]; //HH:MM
 
 void wifi_init(){
   Serial.begin(115200);
@@ -61,21 +61,32 @@ void fetch_weather_data(const char* url){
     DeserializationError error = deserializeJson(doc, *stream);
 
     if(!error){
-      city = doc["name"];
+      strlcpy(city, doc["name"], sizeof(city));
       temperature = doc["main"]["temp"];
-      humidity = doc["main"]["humidity"];
       temperature = temperature - 273.15;
+      humidity = doc["main"]["humidity"];
+
+      time_t dt = doc["dt"]; // get Unix timestamp
+      int tz = doc["timezone"]; //time zone offset
+      time_t local_time = dt + tz; //calculate local time
+      int hours = (local_time % 86400) / 3600; // 60s * 60m * 24h = 86 400, %86400 local time to get number of seconds elapsed today TOTAL, divided by 3600 (60s * 60m) to get # of hours
+      int minutes = (local_time % 3600) / 60; // %3600 to get # of seconds elapsed today but without full hours
+      
+      snprintf(last_update, sizeof(last_update),
+      "%02d:%02d", hours, minutes);
 
       Serial.printf("City: %s\n", city);
       Serial.printf("Temperature: %f\n", temperature);
       Serial.printf("Humidity: %d\n", humidity);
+      Serial.printf("Last update: %s\n", last_update);
 
     }else{
-      Serial.printf("JSON error: %d\n", error);
+      Serial.printf("JSON error: %s\n", error.c_str());
     }
   }else{
     Serial.printf("HTTP error: %d\n", httpValue);
   }
+  http.end();
 }
 void set_text_properties(){
   display.setRotation(1);
@@ -88,7 +99,8 @@ void printing_process(){
   const char* lines [][1] = { 
     {"City:"},
     {"Temperature:"}, 
-    {"Humidity:"}
+    {"Humidity:"},
+    {"Last update:"}
   };
   int line_count = sizeof(lines)/sizeof(lines[0]);
 
@@ -120,13 +132,17 @@ void printing_process(){
           display.setCursor(140, -5 + ((i+1) * 25));
           display.print(humidity);
           break;
+        case 3:
+          display.setCursor(140, -5 + ((i+1) * 25));
+          display.print(last_update);
+          break;
       }
 
       if(i == 0){
         display.setFont(&FreeSans12pt7b);
       }
     }
-    display.drawXBitmap(5, 80, icon1, 16, 16, GxEPD_BLACK);
+    display.drawXBitmap(5, 100, icon1, 16, 16, GxEPD_BLACK);
   }while(display.nextPage());
 }
 void setup(){
