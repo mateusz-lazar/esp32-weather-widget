@@ -66,6 +66,7 @@ void fetch_weather_data(const char* url){
       humidity = doc["main"]["humidity"];
       temperature = temperature - 273.15;
 
+      Serial.printf("City: %s\n", city);
       Serial.printf("Temperature: %f\n", temperature);
       Serial.printf("Humidity: %d\n", humidity);
 
@@ -82,8 +83,8 @@ void set_text_properties(){
   display.setTextColor(GxEPD_BLACK);
 }
 void printing_process(){
-  
-//Assemble displayed text
+
+//Displayed text
   const char* lines [][1] = { 
     {"City:"},
     {"Temperature:"}, 
@@ -94,14 +95,33 @@ void printing_process(){
   display.setFullWindow();
   display.firstPage();
   display.fillScreen(GxEPD_WHITE);
+  
   do
   {
     for(int i = 0; i < line_count; i ++){
+      
       if(i == 0){
         display.setFont(&FreeSansBold12pt7b);
       }
+
       display.setCursor(200, -10 + (i * 25));
       display.print(lines[i][0]);
+      
+      switch(i){
+        case 0:
+          display.setCursor(100, -5 + ((i+1) * 25));
+          display.print(city);
+          break;
+        case 1:
+          display.setCursor(140, -5 + ((i+1) * 25));
+          display.print(temperature);
+          break;
+        case 2:
+          display.setCursor(140, -5 + ((i+1) * 25));
+          display.print(humidity);
+          break;
+      }
+
       if(i == 0){
         display.setFont(&FreeSans12pt7b);
       }
@@ -113,7 +133,8 @@ void setup(){
   wifi_init();
   assemble_url();
   fetch_weather_data(url);
-  display.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+
+  display.init(115200, true, 2, false);
   set_text_properties();
   printing_process();
   display.hibernate();
