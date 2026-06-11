@@ -7,7 +7,6 @@
 #include <ArduinoJson.h>
 
 #include "../include/config.h"
-#include "../include/images.h"
 
 GxEPD2_BW <GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(
   GxEPD2_154_D67(/*CS=*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)
@@ -25,16 +24,24 @@ void wifi_init(){
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.println("Connecting");
+  int attempt_counter = 0;
 
   while(WiFi.status() != WL_CONNECTED)
   {
+    attempt_counter++;
+    if(attempt_counter > 50){
+      Serial.println("Failed to connect to WiFi");
+      Serial.println("Retrying in 15 minutes");
+      break;
+    }
     Serial.print(".");
     delay(100);
   }
-
-  Serial.println("\nConnected to the WiFi network");
-  Serial.print("Local ESP32 IP: ");
-  Serial.println(WiFi.localIP());
+  if(WiFi.status() == WL_CONNECTED){
+    Serial.println("\nConnected to the WiFi network");
+    Serial.print("Local ESP32 IP: ");
+    Serial.println(WiFi.localIP());
+  }
 }
 void assemble_url(){
   snprintf(url, sizeof(url),
@@ -104,49 +111,58 @@ void printing_process(){
   
   do
   {
-    for(int i = 0; i < line_count; i ++){
-      
-      if(i == 0){
-        display.setFont(&FreeSansBold12pt7b);
+    if(WiFi.status() == WL_CONNECTED){
+      for(int i = 0; i < line_count; i ++){
+        
+        if(i == 0){
+          display.setFont(&FreeSansBold12pt7b);
+        }
+  
+        display.setCursor(200, -10 + (i * 25));
+        display.print(lines[i][0]);
+        
+        switch(i){
+          case 0:
+            display.setCursor(100, -5 + ((i+1) * 25));
+            display.print(city);
+            break;
+          case 1:
+            display.setCursor(140, -5 + ((i+1) * 25));
+            display.print(temperature);
+            break;
+          case 2:
+            display.setCursor(140, -5 + ((i+1) * 25));
+            display.print(humidity);
+            break;
+          case 3:
+            display.setCursor(140, -5 + ((i+1) * 25));
+            display.print(last_update);
+            break;
+        }
+  
+        if(i == 0){
+          display.setFont(&FreeSans12pt7b);
+        }
       }
-
-      display.setCursor(200, -10 + (i * 25));
-      display.print(lines[i][0]);
-      
-      switch(i){
-        case 0:
-          display.setCursor(100, -5 + ((i+1) * 25));
-          display.print(city);
-          break;
-        case 1:
-          display.setCursor(140, -5 + ((i+1) * 25));
-          display.print(temperature);
-          break;
-        case 2:
-          display.setCursor(140, -5 + ((i+1) * 25));
-          display.print(humidity);
-          break;
-        case 3:
-          display.setCursor(140, -5 + ((i+1) * 25));
-          display.print(last_update);
-          break;
-      }
-
-      if(i == 0){
-        display.setFont(&FreeSans12pt7b);
-      }
+    }else{
+        display.setCursor(200, -10);
+        display.print("WiFi error");
+        display.setCursor(200, 15);
+        display.print("Retrying in 15m");
     }
-    display.drawXBitmap(5, 100, icon1, 16, 16, GxEPD_BLACK);
   }while(display.nextPage());
 }
 void setup(){
   wifi_init();
-  assemble_url();
-  fetch_weather_data(url);
-
+  
+  if(WiFi.status() == WL_CONNECTED){
+    assemble_url();
+    fetch_weather_data(url);
+  }
   display.init(115200, true, 2, false);
   set_text_properties();
   printing_process();
+
   display.hibernate();
 
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);

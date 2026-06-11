@@ -18,8 +18,8 @@ The application displays name of the location specified by coordinates, temperat
 If using Arduino IDE, refer to migration guides.
 
 ## Setup
-1. clone repo
-2. copy config_example.h to config.h
-3. fill in config.h
-4. if using different ESP32 board, check SPI pinout (main.cpp, 13)
-5. connect ESP32 and upload
+1. Clone repo
+2. Copy config_example.h to config.h
+3. Fill in config.h with your data (get OpenWeather API key at https://openweathermap.org/)
+4. If using different ESP32 board, check SPI pinout (main.cpp, 13)
+5. Connect ESP32 and upload
