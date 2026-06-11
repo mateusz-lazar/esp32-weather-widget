@@ -9,7 +9,7 @@
 #include "../include/config.h"
 
 GxEPD2_BW <GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(
-  GxEPD2_154_D67(/*CS=*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)
+  GxEPD2_154_D67(/*CS=*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4) //CHANGE SPI PINS HERE
 );
 
 char url[256];
@@ -29,7 +29,7 @@ void wifi_init(){
   while(WiFi.status() != WL_CONNECTED)
   {
     attempt_counter++;
-    if(attempt_counter > 50){
+    if(attempt_counter > 50){ //5 seconds WiFi timeout
       Serial.println("Failed to connect to WiFi");
       Serial.println("Retrying in 15 minutes");
       break;
@@ -50,13 +50,13 @@ void assemble_url(){
   Serial.println(url);
 }
 void fetch_weather_data(const char* url){
-  HTTPClient http; //create HTTPClient type object named http
-  http.begin(url); //asign url to http where it will comunicate
+  HTTPClient http;
+  http.begin(url);
 
   int httpValue = http.GET();
   
   if(httpValue == 200){
-    WiFiClient* stream = http.getStreamPtr(); //WiFiClient belongs to HTTPClient
+    WiFiClient* stream = http.getStreamPtr();
     
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, *stream);
@@ -111,7 +111,7 @@ void printing_process(){
   
   do
   {
-    if(WiFi.status() == WL_CONNECTED){
+    if(WiFi.status() == WL_CONNECTED){  //display weather data if WiFi connected
       for(int i = 0; i < line_count; i ++){
         
         if(i == 0){
@@ -144,7 +144,7 @@ void printing_process(){
           display.setFont(&FreeSans12pt7b);
         }
       }
-    }else{
+    }else{  //display WiFi error message
         display.setCursor(200, -10);
         display.print("WiFi error");
         display.setCursor(200, 15);
