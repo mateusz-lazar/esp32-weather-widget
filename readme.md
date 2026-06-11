@@ -37,4 +37,4 @@ If using Arduino IDE, refer to migration guides.
 ## Notes
 - units aren't displayed on screen to save space
 - units can be changed (default is °C), OpenWeather data is sent in Kelvin, which can be calculated to °F if desired, see main.cpp, 67
-- housing for the display and ESP32 could be constructed, but my goal with this project was mainly learning to code, not to design harware
+- housing for the display and ESP32 could be constructed, but my goal with this project was mainly learning to code, not to design hardware
