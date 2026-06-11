@@ -13,12 +13,6 @@ GxEPD2_BW <GxEPD2_154_D67, GxEPD2_154_D67::HEIGHT> display(
   GxEPD2_154_D67(/*CS=*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)
 );
 
-const char* ssid = WIFI_SSID;
-const char* password = WIFI_PASS;
-const char* api_key = API_KEY;
-const char* lat = LAT;
-const char* lon = LON;
-
 char url[256];
 char city[32];
 float temperature;
@@ -29,7 +23,7 @@ void wifi_init(){
   Serial.begin(115200);
   delay(1000);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.println("Connecting");
 
   while(WiFi.status() != WL_CONNECTED)
@@ -45,7 +39,7 @@ void wifi_init(){
 void assemble_url(){
   snprintf(url, sizeof(url),
   "https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s",
-  lat, lon, api_key);
+  LAT, LON, API_KEY);
   Serial.println(url);
 }
 void fetch_weather_data(const char* url){
@@ -154,5 +148,8 @@ void setup(){
   set_text_properties();
   printing_process();
   display.hibernate();
+
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  esp_deep_sleep_start();
 }
 void loop() {};
