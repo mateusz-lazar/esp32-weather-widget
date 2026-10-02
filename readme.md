@@ -3,7 +3,7 @@
 ESP32 based project using E-ink display controlled by GxEPD2 library to show fetched weather data from OpenWeather API.
 
 ## Features
-The application displays name of the location specified by coordinates, local temperature, humidity and time of the last update. The ESP32 is set to deep sleep, interrupted every 15 minutes only to fetch and display new data. If the ESP32 is unable to connect to WiFi, it will stop attempting after 5 seconds and display error message.
+The application displays name of the location (specified by coordinates), local temperature, humidity and time of the last update. The ESP32 is set to deep sleep, interrupted every 15 minutes only to fetch and display new data. If the ESP32 is unable to connect to WiFi, it will stop attempting after 5 seconds and display error message.
 
 ## Hardware
 - ESP32 DOIT DEVKIT V1
